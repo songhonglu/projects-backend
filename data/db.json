@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": "user_admin",
+      "username": "songhw",
+      "displayName": "宋老师",
+      "role": "admin",
+      "projectPerms": null,
+      "avatar": "#2563eb",
+      "email": "",
+      "phone": "",
+      "passwordHash": "d4ecee721c1e120a1c323228929924311c9ccd3f02c3999f749b41516d67f9b1"
+    },
+    {
+      "id": "user_chenpt",
+      "username": "chenpt",
+      "displayName": "陈鹏涛",
+      "role": "user",
+      "projectPerms": [],
+      "avatar": "#16a34a",
+      "email": "",
+      "phone": "",
+      "passwordHash": "60b502d518962974e4f8629ce8f783e21c746dc0ea87ddf53f4b10d0bfa29567"
+    }
+  ],
+  "authCtrl": {
+    "contractmap": true,
+    "huarongdao-game": false,
+    "amberk": true,
+    "number-huarongdao": false,
+    "daily-signin": false
+  },
+  "theme": "dark"
+}

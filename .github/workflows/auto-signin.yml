@@ -1,0 +1,42 @@
+name: Auto Daily Signin
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+jobs:
+  signin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login and get token
+        id: login
+        run: |
+          RESPONSE=$(curl -s -X POST "${BACKEND_URL}/api/auth/login" \
+            -H "Content-Type: application/json" \
+            -d '{"username":"songhw","password":"${BACKEND_PASSWORD}"}')
+          TOKEN=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('token',''))")
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Login failed"
+            exit 1
+          fi
+
+      - name: Check if already signed in
+        id: check
+        run: |
+          RESPONSE=$(curl -s -X POST "${BACKEND_URL}/api/signin/check" \
+            -H "Authorization: Bearer ${{ steps.login.outputs.token }}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          ALREADY=$(echo "$RESPONSE" | python3 -c "import sys,json; print(str(json.load(sys.stdin).get('alreadySignedIn',False)).lower())")
+          echo "already=$ALREADY" >> $GITHUB_OUTPUT
+
+      - name: Sign in
+        if: steps.check.outputs.already != 'true'
+        run: |
+          RESPONSE=$(curl -s -X POST "${BACKEND_URL}/api/signin/do" \
+            -H "Authorization: Bearer ${{ steps.login.outputs.token }}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Success!' if d.get('success') else 'Failed: '+d.get('error',''))"

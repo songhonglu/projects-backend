@@ -210,6 +210,54 @@ app.post('/api/data/write', requireAdmin, (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════
+// Signin API
+// ═══════════════════════════════════════════════════════
+function getSigninKey(userId) {
+  return 'signin_' + userId;
+}
+
+app.post('/api/signin/check', requireAdmin, (req, res) => {
+  const db = loadDB();
+  const userId = req.auth.payload.userId;
+  const key = getSigninKey(userId);
+  const today = new Date().toISOString().slice(0, 10);
+  const record = db.signins && db.signins[key] && db.signins[key][today];
+  res.json({ success: true, alreadySignedIn: !!record, today });
+});
+
+app.post('/api/signin/do', requireAdmin, (req, res) => {
+  const db = loadDB();
+  const userId = req.auth.payload.userId;
+  const key = getSigninKey(userId);
+  const today = new Date().toISOString().slice(0, 10);
+  
+  if (!db.signins) db.signins = {};
+  if (!db.signins[key]) db.signins[key] = {};
+  if (db.signins[key][today]) {
+    return res.status(400).json({ error: 'Already signed in today' });
+  }
+  
+  const now = new Date();
+  db.signins[key][today] = {
+    date: today,
+    time: now.toTimeString().slice(0, 8),
+    reward: 20,
+    dayOfWeek: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()],
+  };
+  saveDB(db);
+  res.json({ success: true, record: db.signins[key][today] });
+});
+
+app.get('/api/signin/history', requireAdmin, (req, res) => {
+  const db = loadDB();
+  const userId = req.auth.payload.userId;
+  const key = getSigninKey(userId);
+  const records = db.signins && db.signins[key] ? Object.values(db.signins[key]) : [];
+  records.sort((a, b) => b.date.localeCompare(a.date));
+  res.json({ success: true, records });
+});
+
+// ═══════════════════════════════════════════════════════
 // Start
 // ═══════════════════════════════════════════════════════
 app.listen(PORT, '0.0.0.0', () => {
